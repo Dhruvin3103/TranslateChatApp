@@ -9,4 +9,5 @@ def translate_mess(mess,src,trg):
     result = translator.translate(mess)
     print(result) 
     return result
+
 # Output: Dies ist ein Beispiel.
