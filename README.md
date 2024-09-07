@@ -1,6 +1,5 @@
 
-
-First, create a virtual environment to isolate the project dependencies:
+### 1. First, create a virtual environment to isolate the project dependencies:
 
 ```bash
 python -m venv venv
