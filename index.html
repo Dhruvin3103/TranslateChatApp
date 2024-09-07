@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebSocket Chat with Language Selection</title>
+    <title>WebSocket Chat with Translation</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -19,7 +19,7 @@
             padding: 10px;
         }
         #message-input {
-            width: 60%;
+            width: 70%;
             padding: 5px;
         }
         #send-button, #connect-button {
@@ -27,6 +27,7 @@
         }
         #language-select {
             padding: 5px;
+            margin-right: 10px;
         }
         .input-group {
             margin-bottom: 10px;
@@ -34,14 +35,10 @@
     </style>
 </head>
 <body>
-    <h1>WebSocket Chat with Language Selection</h1>
+    <h1>WebSocket Chat with Translation</h1>
     <div class="input-group">
         <label for="user-id">Your User ID:</label>
         <input type="text" id="user-id" placeholder="Enter your user ID">
-        <button id="connect-button" onclick="connect()">Connect</button>
-    </div>
-    <div id="chat-box"></div>
-    <div class="input-group">
         <select id="language-select">
             <option value="en">English</option>
             <option value="es">Spanish</option>
@@ -54,6 +51,10 @@
             <option value="hi">Hindi</option>
             <option value="ru">Russian</option>
         </select>
+        <button id="connect-button" onclick="connect()">Connect</button>
+    </div>
+    <div id="chat-box"></div>
+    <div class="input-group">
         <input type="text" id="message-input" placeholder="Type your message...">
         <button id="send-button" onclick="sendMessage()">Send</button>
     </div>
@@ -61,9 +62,11 @@
     <script>
         let socket;
         let userId;
+        let userLanguage;
 
         function connect() {
             userId = document.getElementById('user-id').value;
+            userLanguage = document.getElementById('language-select').value;
             if (!userId) {
                 alert('Please enter a user ID');
                 return;
@@ -73,15 +76,17 @@
 
             socket.onopen = function(e) {
                 console.log('Connected to WebSocket');
+                // Send user's language preference
+                socket.send(JSON.stringify({language: userLanguage}));
                 document.getElementById('chat-box').innerHTML += '<p>Connected to chat.</p>';
                 document.getElementById('connect-button').disabled = true;
                 document.getElementById('user-id').disabled = true;
+                document.getElementById('language-select').disabled = true;
             };
 
             socket.onmessage = function(event) {
                 const data = JSON.parse(event.data);
-                const languageName = getLanguageName(data.language);
-                const message = `<p><strong>${data.name} (${data.sender_id}):</strong> <span style="color: #888;">[${languageName}]</span> ${data.content}</p>`;
+                const message = `<p><strong>${data.name} (${data.sender_id}):</strong> ${data.content}<br><small>Original language: ${data.original_language}, Translated to: ${data.translated_language}</small></p>`;
                 document.getElementById('chat-box').innerHTML += message;
                 document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
             };
@@ -94,6 +99,7 @@
                 }
                 document.getElementById('connect-button').disabled = false;
                 document.getElementById('user-id').disabled = false;
+                document.getElementById('language-select').disabled = false;
             };
 
             socket.onerror = function(error) {
@@ -104,38 +110,18 @@
         function sendMessage() {
             const messageInput = document.getElementById('message-input');
             const message = messageInput.value;
-            const languageSelect = document.getElementById('language-select');
-            const selectedLanguage = languageSelect.value;
-
             if (message && socket.readyState === WebSocket.OPEN) {
                 const data = {
                     name: userId,
                     content: message,
-                    language: selectedLanguage
+                    language: userLanguage
                 };
                 socket.send(JSON.stringify(data));
                 messageInput.value = '';
-                const languageName = getLanguageName(selectedLanguage);
-                const ownMessage = `<p><strong>You:</strong> <span style="color: #888;">[${languageName}]</span> ${message}</p>`;
+                const ownMessage = `<p><strong>You:</strong> ${message}</p>`;
                 document.getElementById('chat-box').innerHTML += ownMessage;
                 document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
             }
-        }
-
-        function getLanguageName(code) {
-            const languages = {
-                'en': 'English',
-                'es': 'Spanish',
-                'fr': 'French',
-                'de': 'German',
-                'zh': 'Chinese',
-                'ja': 'Japanese',
-                'ko': 'Korean',
-                'ar': 'Arabic',
-                'hi': 'Hindi',
-                'ru': 'Russian'
-            };
-            return languages[code] || code;
         }
 
         // Allow sending message with Enter key
