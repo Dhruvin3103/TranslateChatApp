@@ -5,6 +5,7 @@ from easygoogletranslate import EasyGoogleTranslate
 
 app = FastAPI()
 
+
 # Dictionary to store connected WebSocket clients and their language preferences
 connected_users = {}
 
